@@ -1,0 +1,852 @@
+---
+output:
+  pdf_document:
+    highlight: haddock
+    keep_tex: yes
+    latex_engine: xelatex
+    number_sections: yes
+    # toc: yes
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage{threeparttablex}
+- \usepackage[normalem]{ulem}
+- \usepackage{makecell}
+- \usepackage{xcolor}
+geometry: margin = 0.5in
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+urlcolor: blue
+---
+
+```{=latex}
+\vspace*{\fill}
+\begin{center}
+{\Huge \textbf{A Report About Bike Fitting}} \\[1.5em]
+{\Large Josh Collins} \\[1em]
+{\large Auguest 14, 2025}
+\end{center}
+\vspace*{\fill}
+\newpage
+```
+
+```{r setup, include=FALSE}
+# This is the setup chunk
+#  Here you can set global options for the entire document
+
+library(knitr) # I recommend doing this
+
+# Although you can call functions from a library using the following notation
+#  without loading the entire library.
+knitr::opts_chunk$set(echo = TRUE, 
+                      comment = NA, # Recommended
+                      fig.path = "./figures/",  # Store all figures here in relative path
+                      fig.align = "center",
+                      fig.width = 7,
+                      fig.height = 7,
+                      message = FALSE, # Turn off load messages
+                      warning = FALSE # Turn off warnings,
+                      )
+
+
+
+
+```
+
+\clearpage
+
+```{r include=FALSE}
+
+# You should load all of the libraries that you plan to use here unless you plan
+#  on using the notation library_name::function_name()
+
+library(tidyverse) 
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(stringr)
+library(scales)
+library(ggfortify)
+setwd("C://Users/110jo/OneDrive/Desktop/Virginia Tech/Third Year/CMDA_3654/Semester_Project/")
+bikes <- read.csv("bikes_converted.csv")
+
+```
+
+# Abstract
+
+In this project, I explored the ability to manipulate and analyze bicycle dimensions to properly fit a rider's proportions without relying on a bike fitting service.
+Why I have done this is to take out the expensive 3rd party, while providing a similar option for free.
+I will use technical skills ranging from data cleaning and analysis to machine learning and visualizations to best aid the process of fitting a new bike.
+This matters to me as I don't have the ability to pay for high end bikes and fitting services, however I am competitive at nature so I want to provide the best chance to compete with those who have the best technology at their disposal.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+# Inroduction: A Bike Fitting Compositional DataSet
+
+This dataset will help customers decide which bike properly fits their body dimensions.
+The purpose of this analysis is to help prevent injury while riding any style of bike, whether it be a mountain, road, or gravel. However, I will focus mainly on road bikes for this report.
+Many times I have personally faced injury due to biking, specifically in my lower back and thighs.
+In high school I tore my IT Band, which gets irritated when I bike.
+Due to the dimensions of my current bike I have to extend to far back, and do not strike directly downwards like I'd like to.
+Partially that is because of the way my body has formed.
+The purpose of analyzing this dataset is to one, measure road bike dimensions and decide a bike that fits my body proportions while also being in the correct price range, while saving money from having to do a professional bike fitting, costing up to $250 at my local bike shops.
+And two, to encourage others to analyze their body proportions as well and pick a bike that properly fits them and their desires.
+
+The basis of the plan is to design multiple tests for every bike to see which one best fits my desired size and price range.
+Each step in this project will perform a test on the bikes, with the last bike standing hopefully, being crowned the winner and the one I will most likely buy in preparation for an IronMan.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+# Description of Data
+
+This data was obtained from a GitHub repository.
+With the URL to access the bike purchase ability, and dimensions of each bike.
+There are many dimensions that are less important for this project such as many dimensions involving the fork.
+In road cycling the fork is less important as the frame is.
+There will be a significant focus on the frame, with various focuses on the stack, front tube, seat tube, wheelbase, and overall frame size.
+It is very important to consider these dimensions because they will impact the amount of lean that you will have when riding, changing the type of road bike.
+When you lean more, the bike becomes a time trial, or racing bike which are uncomfortable with the length that I will look to ride.
+Then if the positioning is too far backwards, it turns into commuter or gravel bike which is too slow for what I'm currently looking for.
+Now these are all dimensions someone should be looking at, for example, even though there is a specific category for gravel bikes, there is a chance that a road bike will have the same seated position as a gravel bike, without explicitly stating that it is one.
+The best way to look for that is the width of the fork, which we will get into further into the project analysis.
+All of these dimensions will help the viewer understand the importance of choosing the correct bike for them self.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+## Research Questions
+
+1.  Can running a simulation through R be a comparable substitute to a professional bike-fitting?
+
+2.  Based on the simulations, will the reader be able to appropriately select a bike that they feel comfortable with.
+
+3.  After running the simulations and choosing a bike that best fits, will "I" as the test subject like and choose the bike that this report chose, or will I choose to be professionally fitted.
+
+\newpage
+
+## Carrying out Research Questions
+
+I would like to complete question one by, creating a formula that returns a value for Reach, Stack, Head_Tube_Angle and Seat_Tube_Angle_Real.
+And Two, creating a graph that hotplots this sweet spot point along many corresponding bike points.
+Finally from this I will write another thing that will return the 10 most acceptable bikes that land around that sweet spot point.
+
+I would like to complete question two by, writing a linear regression model that creates a line of best fit by incorporating height from previous homework sets.
+I believe that adding a 3D table from the most recent homework set will be a great addition as well.
+From this we can categorize properly each variable we choose.
+
+I would like to complete question three by, deciding based on preference if the bike that best fits my dimensions is correct.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+A visual representation of bike geometry will be provided here:
+
+```{r include-image, echo=FALSE, out.width="60%"}
+knitr::include_graphics("Bike.png")
+```
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+# Methods of Data Analysis
+
+Various libraries will be used in this project, but it is important to highlight the main ones.
+ggplot2 and dplyr will carry a significant brunt of the work as they are best suited for large scale data analysis and visualization.
+
+Initially the data frame came with a semicolon (;) delimeter, which is popular with European countries as they use a comma where imperial units are using periods.
+So initially I had to convert the delimeter from a semicolon to a comma, so that the csv file could properly separate and sort the data based on the variables or categories that they fall under.
+
+Once the data Is properly sorted and defined, we begin to focus on making some partial visualizations.
+With a focus on the frame size and dimensions, the plan is the graph the L and XL or 58 and 61cm frames on a scatterplot based on their reach and stack.
+These two values are the most important on a bike as they show the distance an angle of the top of the head tube to the crank (where the pedals are located).
+This dimension will give a good estimate of the type of bike we are looking for, as I personally am looking for a bike that has a neutral-aggressive position, which is the position of most endurance bikes.
+This position will help the rider maintain high speeds up to 18-20mph for a sustained mileage upwards of 100 miles.
+
+The data will be color coded based on frame size (S, M, L, and XL) so that the viewer can see the difference between all frames.
+With a circle or a dot around where my personal preference is.
+From there we can grab bikes around that value to put into round two of analysis.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+# Results: Data Analysis and Visualizations
+
+```{r, echo=FALSE}
+bikes <- bikes %>%
+  mutate(
+    Frame_Size = str_to_upper(str_trim(Frame_Size)),  # remove extra spaces
+    Frame_Size = case_when(
+      Frame_Size == "XXS" ~ 47,
+      Frame_Size == "XS"  ~ 50,
+      Frame_Size %in% c("S", "SM")  ~ 52,
+      Frame_Size %in% c("M", "MD")  ~ 54,
+      Frame_Size %in% c("L", "LA")  ~ 56,
+      Frame_Size == "XL"  ~ 58,
+      Frame_Size == "XXL" ~ 61,
+      TRUE ~ NA_real_  # catch-all
+    )
+  )
+```
+
+```{r, echo=FALSE}
+bikes <- bikes %>%
+  mutate(Category = case_when(
+    str_detect(Category, regex("gravel", ignore_case = TRUE)) ~ "Gravel",
+    str_detect(Category, regex("road", ignore_case = TRUE)) ~ "Road",
+    TRUE ~ NA_character_  # set everything else to NA for now
+  ))
+```
+
+## Graph 1: PCA Biplot of Road Bikes
+
+Here we make a biplot that clusters road bike manufacturers based on their dimensions.
+This is the very first form of gathering data and visualizing it.
+We want to see in name all the types of bike models in this dataset that we can get.
+
+The main reason of this is to compare with the bike that I get in the end.
+If we find that a bike manufacturer is found near the bike chosen as best fit in the end, we can look more into it in the future.
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+# seed for reproducibility
+set.seed(123)
+
+# filter only Road bikes and randomly pick 75
+bikes_filtered <- bikes %>%
+  filter(Category == "Road") %>%
+  slice_sample(n = 75)
+
+# select numeric variables for PCA
+bikes_num <- bikes_filtered %>%
+  select(Reach, Stack, Top_Tube_Length_Horizontal, Wheelbase)
+
+#rRemove rows with missing numeric data
+complete_idx <- complete.cases(bikes_num)
+bikes_num <- bikes_num[complete_idx, ]
+bikes_labels <- bikes_filtered$Model[complete_idx]
+
+# scale numeric data
+bikes_scaled <- scale(bikes_num)
+
+# perform PCA
+pca_res <- prcomp(bikes_scaled, center = TRUE, scale. = TRUE)
+
+# plot PCA biplot with model names as labels
+autoplot(pca_res,
+         data = bikes_filtered[complete_idx, ],
+         colour = 'Brand',
+         shape = FALSE,
+         label = TRUE,
+         label.size = 3,
+         label.repel = TRUE,        # avoids overlapping labels
+         label.label = bikes_labels) +  # use actual bike model names
+  ggtitle("PCA Biplot: Sampled Road Bikes") +
+  theme_minimal()
+```
+
+Here we see that roughly 86% of the variance is found along PC1 and 9% of the variance is found along PC2, with another 5% variance explained by PC3 and PC4.
+We see based on the graph that even between some models that different trims completely change the bike.
+For example, the Canyon Endurance CFR and CF SLX are completely shaped differently from the CF trim.
+This will need to be taken into accout when choosing the final bike.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+## Graph 2: Violin Jittered Plot
+
+This graph is a violin plot that shows density levels in a boxplot format.
+This is a great step up from a boxplot to visualize not only the quartile ranges of the values, but the density at those levels.
+I overlayed a jitter plot as well so you can properly see the actual amount of points at each level.
+This graph gives the same example of steps between each frame size, but we can see now instead see the wheelbase.
+
+The wheelbase is the values that represents the length in between the center hub of each wheel.
+These are the two most load bearing parts of the fork and frame.
+
+We can see the main length that each frame size falls into, but it is interesting to see how many values fall lower than the average.
+These all represent the time trial and speed bikes.
+These bikes strictly are used for short distance, extremely high speed, road racing.
+The positions are extremely uncomfortable as the head will be at the handlebars putting a lot of the riders weight on the arms and crotch.
+This is not the type of bike that I want.
+
+This graph will continue into the next part, as I will further check wheelbase based on the frame size using MLR.
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+bikes %>%
+  filter(!is.na(Frame_Size), Wheelbase <= 1500, Wheelbase >= 750, !is.na(Wheelbase)) %>%
+  ggplot(aes(x = as.factor(Frame_Size), y = Wheelbase, fill = as.factor(Frame_Size))) +
+  geom_violin(alpha = 0.7, color = "black", draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(width = 0.2, size = 1.5, alpha = 0.05) +
+  labs(
+    title = "Distribution of Wheelbase by Frame Size",
+    x = "Frame Size",
+    y = "Wheelbase (mm)",
+    fill = "Frame Size"
+  )
+```
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+## Table 1: 3-Way MLR Table
+
+For this table the idea was to create a 3-way table that saw the difference between wheel bases. We will perform this 3-way table using clustering to create categories based on MLR, setting wheel base as the respose variable and the wheel size, type of bike, and frame size as predictor binary variables.
+
+```{r, echo=FALSE}
+# making values numeric
+bikes$Wheelbase <- as.numeric(as.character(bikes$Wheelbase))
+
+# XL dummy based on numeric frame size
+bikes <- bikes %>%
+  mutate(FrameSize_XL = ifelse(Frame_Size >= 58, 1, 0))  # 58 and above = XL
+
+# other binary variables
+bikes <- bikes %>%
+  mutate(
+    Category_Road  = ifelse(Category == "Road", 1, 0),
+    WheelSize_700C = ifelse(Wheel_Size == "28″ / 700C", 1, 0)
+  )
+
+# converting to factors with levels 0 and 1
+bikes$Category_Road   <- factor(bikes$Category_Road,   levels = c(0, 1))
+bikes$FrameSize_XL    <- factor(bikes$FrameSize_XL,    levels = c(0, 1))
+bikes$WheelSize_700C  <- factor(bikes$WheelSize_700C,  levels = c(0, 1))
+
+# aggregate mean wheelbase by all 3 factors
+agg <- aggregate(
+  Wheelbase ~ Category_Road + FrameSize_XL + WheelSize_700C,
+  data = bikes,
+  FUN = mean,
+  na.rm = TRUE
+)
+
+#turn the aggregated data into a 3D table
+table_3d <- xtabs(
+  Wheelbase ~ Category_Road + FrameSize_XL + WheelSize_700C,
+  data = agg
+)
+
+# rename dimensions for clarity
+dimnames(table_3d) <- list(
+  Category_Road  = c("Other Category", "Road"),
+  FrameSize_XL   = c("Not XL", "XL"),
+  WheelSize_700C = c("Other Wheel", "700C")
+)
+
+table_3d
+```
+
+Based on this table we see that road bikes have a slightly shorter wheelbase than those not (1031.0 v 1038.6).
+This is due to mountain bikes needing more grip on trails, road bikes don't need that much distance under foot, this causes a negative effect on wheelbase.
+Obviously XL frames have a larger wheelbase than smaller sizes, causing a positive effect of wheelbase.
+Lastly standard wheel size (28" x 700c) has a longer than not standard.
+This is because commercially the standard size is the largest size, causing a positive effect on wheelbase.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+## Graph 3: Frequency Bar Chart MLR
+
+Based on the 3-way table, it would be best to put those values into a relative frequency table.
+This is to visualize the overall effect each value has on the wheelbase.
+
+```{r, echo=FALSE, fig.width=4, fig.height=3}
+# flatten 3D table into a data frame
+df_freq <- as.data.frame.table(table_3d) %>%
+  rename(
+    Category_Road   = Category_Road,
+    FrameSize_XL    = FrameSize_XL,
+    WheelSize_700C  = WheelSize_700C,
+    MeanWheelbase   = Freq
+  )
+
+# setting up relative frequency
+df_freq <- df_freq %>%
+  group_by(Category_Road, FrameSize_XL) %>%
+  mutate(RelFreq = MeanWheelbase / sum(MeanWheelbase, na.rm = TRUE))
+
+# plot stacked bar chart
+ggplot(df_freq, aes(x = FrameSize_XL, y = RelFreq, fill = WheelSize_700C)) +
+  geom_col(position = "fill") +  # "fill" makes it 100% stacked
+  facet_wrap(~Category_Road) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Relative Frequency of Wheelbase by Category, Frame Size, and Wheel Size",
+    x = "Frame Size",
+    y = "Percentage",
+    fill = "Wheel Size"
+  ) +
+  theme_minimal()
+```
+
+We see in this plot that almost every value falls under around 50% of the overall data.
+This is both good and bad, for the bad, that cuts my possible options for a bike in an eighth.
+However, there are over 5,000 bikes in this dataset, so 625 bikes to still chose from is great!
+Visually we would like to choose from the blue bar labeled XL in the Road category.
+Further in this report we will continue to narrow down choices till we find a bike suitable for my personal needs.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+## Graph 4: Scatterplot Based on Stack and Reach
+
+For this scatterplot, we graphed the Stack versus the Reach of the bikes in the L and XL Frame_Size category.
+There is a black dot that represents the ideal range for what I am personally looking for, at around 440 mm Reach and 630mm Stack.
+This is to build off of the relative frequency plot.
+
+To better understand Stack and Reach, we can refer to the image of bike dimensions.
+The stack refers to the length between the center of the crank and the joining position of the Reach.
+The Reach meets at the same point but instead runs horizontally along the Top Tube of the bike frame to the base of the handlebars.
+
+From this explanation we can see that even though L and XL frames are different they can essentially have the same dimensions depending in the riders preference.
+So even though I am 194 cm (6ft 3in) tall I may fit better into a L frame which accommodates people who are typically under 6ft tall.
+This visualization is a good start for crossing out bikes that won't be a good fit what type of riding I plan to do.
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+bikes %>%
+  filter(Frame_Size %in% c(58, 61), Reach >= 300, Stack >= 400) %>%
+  ggplot(aes(x = Reach, y = Stack, color = as.factor(Frame_Size))) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_point(aes(x = 440, y = 630), color = "black", size = 4, shape = 16) +
+  labs(
+    title = "Reach vs. Stack for Frame Sizes 58 and 61",
+    x = "Reach (mm)",
+    y = "Stack (mm)",
+    color = "Frame Size"
+  )
+```
+
+Based on both L and XL frames we see that there are a ton of options to choose from that match the desired dimensions specified.
+We will further investigate the dots that fall close to the black dot specified.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+## Table 2: Tolerance Fitted Table
+
+I created a table that coincides with graph 3.
+This table takes the values that are within +- 50mm from my specified Stack and Reach length.
+Which is only about a 2in difference from my desired value.
+I from there only chose road bikes, because even though Gravel bikes fit my dimensions better due to my torso length, the wide tires slow down overall speed around 2mph per hour.
+The bikes returned are all categorized in the endurance racer road bike.
+The endurance category is fit under road bikes that can handle long distance rides at high speed, while providing a comfortable riding position for the wrists and crotch regions for the rider.
+This position will keep the rider more upright which basically puts less pressure on the main contact points of the bike.
+
+For the most returned bikes on this list, we see the Canyon Aeroad, which is an amazing bike.
+The only problem with this bike is the insane price at base level bikes costing upwards of \$4,000.
+This bike is simply unrealistic for a college student.
+Once I maintain a solid job I will definitely get this bike, as it provides the best ride in it's class.
+However, we see another bike very close, the Gain Carbon.
+At half the price, it is still expensive, but much more manageable than the Aeroad.
+
+```{r, echo=FALSE}
+ideal_reach <- 440
+ideal_stack <- 630
+tolerance <- 50
+
+filtered_bikes <- bikes %>%
+  filter(
+    Category %in% c("Road"),
+    Frame_Size == 61,
+    Reach >= (ideal_reach - tolerance),
+    Reach <= (ideal_reach + tolerance),
+    Stack >= (ideal_stack - tolerance),
+    Stack <= (ideal_stack + tolerance)
+  ) %>% select(Brand, Model, Frame_Size, Reach, Stack) %>%
+  arrange(Reach)  # sort by Reach ascending
+
+# View the filtered table
+print(filtered_bikes)
+```
+
+From this table we see the Canyon Aeroad has the best match to my body type.
+Personally, I would love an Aeroad, as they are some of the best bikes on the market currently.
+Specs include the newest top of the line shifters made by shimano, a carbon frame for super lightweight riding, weighing 2/3 as much as bikes in it's same category, and newly designed aerodynamic shape for drag resistance.
+However, the main problem with the aeroad, is that it costs as much as a downpayment on a car.
+So, I don't think I will be able to get one anytime soon.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+# Tables 3 & 4: Count Based On Brand and Frame Size
+
+For these tables I wanted to choose the already filtered bikes and return a count based on manufacturer and their average stack and reach length.
+As well as an aggregated table summary based on all those bikes.
+
+For the manufacturers we see Wilier and Canyon have designed the most bikes that fit my personal needs geometrically.
+This provides great help as having multiple options per manufacturer means that the brand is most likely a better option for someone with my dimensions.
+While it is good, we must keep in mind that the multiple bikes may just be the same model but different trim.
+That concept is true for Canyon, however, that is not the case for Wilier.
+So, deducing that, it may be a good idea to look into Wilier as it may have more price range options.
+
+For the average statistics based on every bike that has been filtered to my liking, we can see basic summaries of variables we wanted to focus on.
+For the mean reach and stack, we get 407 and 617mm respectively.
+This is not too far off from my goal values of 440 and 630mm.
+We see for standard deviations (SD) we're 3 SD from our true desired reach length and 1 SD from our desired Stack length.
+This is fine, as I have long arms so compensating for a slight shift in what I want out of a bike is okay.
+
+```{r summary-tables, echo=FALSE, results='asis'}
+# Table 3: Brand-level summary
+summary_table <- filtered_bikes %>%
+  group_by(Brand) %>%
+  summarize(
+    count = n(),
+    avg_reach = mean(Reach, na.rm = TRUE),
+    avg_stack = mean(Stack, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(summary_table, format = "latex", booktabs = TRUE, caption = "Brand-Level Summary") %>%
+  kable_styling(font_size = 8)
+
+# Table 4: Frame size-level summary
+frame_summary <- filtered_bikes %>%
+  group_by(Frame_Size) %>%
+  summarize(
+    count = n(),
+    mean_reach = mean(Reach, na.rm = TRUE),
+    sd_reach = sd(Reach, na.rm = TRUE),
+    mean_stack = mean(Stack, na.rm = TRUE),
+    sd_stack = sd(Stack, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(frame_summary, format = "latex", booktabs = TRUE, caption = "Frame Size-Level Summary") %>%
+  kable_styling(font_size = 8)
+```
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+# Descision
+
+After going through all the steps of this project, I have to decided to look further into the Scott Addict RC. The reason for this, is that of the bikes that closely resembled the Canyon Aeroad, the Addict was one of the cheaper options. While it still sits at around $2,000, I plan to wait a year or so before I purchase it. I previously looked at the Speedster model as well, which is half the price. So, if price proves as a large constraint I will hopefully get the Speedster instead. 
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+# Conclusion
+
+From this bike analysis, I would like you to take away that bikes have much more dimensions than just the size.
+Many bike fitters don't properly explain every detail when trying to sell you a bike.
+While it's their prerogative to sell you the most expensive bike they can, expensive doesn't always mean the best.
+If there is one core concept I would like a reader to take away from this analysis, its the Reach and Stack height.
+These two values control every angle of the bike, while a bike might have a longer head tube, the reach and stack will stay the same as long as the head tube moves proportional to the seat tube angle, which is ultimately controlled by the reach and stack.
+
+This free example of choosing a bike, leaves out the most important factor of choosing a bike, which is how you feel when you sit on it.
+But, it accounts for the second most important value, which is the longevity of the bike.
+Many faults that riders make, is choosing a bike in person because it looks cool and feels relatively good.
+However, later down the line the position they sit ends up ruining their lower back because they're in a too aggressive position.
+This causes them to sell their bike at half the price they bought it at, which for some, is not a problem, but it's disingenuous to not get the most out of a bike.
+Overall, I just wished that I could use skills in statistics to aid in the search for a new reasonable bike without having to pay upwards of \$250 for a professional fitting, for them to tell me what I already know.
+And if this process helps me, I'm sure it'll help someone else when the time comes.
+
+This report has been a culmination of all methods and technical skills that I have gained from this summer course. While it's original purpose was to find the best bike for myself, if anyone chooses to use these calculations and visualizations, I will leave a raw code copy on my GitHub in the citations portion of this report. I hope that this report has helped you understand the importance of choosing a bike as much as it has me.
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+# Citations
+
+Bike Dimensions: <https://geometrygeeks.bike/understanding-bike-geometry/>
+
+Github Repository: <https://github.com/dorianprill/dataset-bicycle-geometry>
+
+Graph Gallery GGPlot2: <https://r-graph-gallery.com/ggplot2-package.html>
+
+Personal Github Repository for Download: <https://github.com/joshcollins02/CMDA3654.git>
+
+\vspace{.2in}
+\hrule
+\vspace{.2in}
+
+\newpage
+
+# Appendix
+
+Here I will be providing all the code
+
+## Sorting the Data
+
+```{r, eval=FALSE}
+# sorting the bike dataset to fit into groups (cleaning)
+bikes <- bikes %>%
+  mutate(Frame_Size = str_to_upper(Frame_Size),
+         Frame_Size = case_when(
+           Frame_Size == "XXS" ~ 47,
+           Frame_Size == "XS" ~ 50,
+           Frame_Size %in% c("S", "SM") ~ 52,
+           Frame_Size %in% c("M", "MD") ~ 54,
+           Frame_Size %in% c("L", "LA") ~ 56,
+           Frame_Size == "XL" ~ 58,
+           Frame_Size == "XXL" ~ 61,
+         ))
+
+# taking only the gravel and road bikes and making everything else an NA value
+bikes <- bikes %>%
+  mutate(Category = case_when(
+    str_detect(Category, regex("gravel", ignore_case = TRUE)) ~ "Gravel",
+    str_detect(Category, regex("road", ignore_case = TRUE)) ~ "Road",
+    TRUE ~ NA_character_  # set everything else to NA for now
+  ))
+
+```
+
+## Graph 1: PCA Biplot
+
+```{r, eval=FALSE}
+# seed for reproducibility
+set.seed(123)
+
+# filter only Road bikes and randomly pick 75
+bikes_filtered <- bikes %>%
+  filter(Category == "Road") %>%
+  slice_sample(n = 75)
+
+# select numeric variables for PCA
+bikes_num <- bikes_filtered %>%
+  select(Reach, Stack, Top_Tube_Length_Horizontal, Wheelbase)
+
+#rRemove rows with missing numeric data
+complete_idx <- complete.cases(bikes_num)
+bikes_num <- bikes_num[complete_idx, ]
+bikes_labels <- bikes_filtered$Model[complete_idx]
+
+# scale numeric data
+bikes_scaled <- scale(bikes_num)
+
+# perform PCA
+pca_res <- prcomp(bikes_scaled, center = TRUE, scale. = TRUE)
+
+# plot PCA biplot with model names as labels
+autoplot(pca_res,
+         data = bikes_filtered[complete_idx, ],
+         colour = 'Brand',
+         shape = FALSE,
+         label = TRUE,
+         label.size = 3,
+         label.repel = TRUE,        # avoids overlapping labels
+         label.label = bikes_labels) +  # use actual bike model names
+  ggtitle("PCA Biplot: Sampled Road Bikes") +
+  theme_minimal()
+```
+
+## Graph 2: Boxplot
+
+```{r, eval=FALSE}
+# boxplot comparing frame size to seat tube length and filtering out NA values
+bikes %>%
+  filter(!is.na(Category), !is.na(Frame_Size)) %>%
+  ggplot(aes(x = as.factor(Frame_Size), y = Seat_Tube_Length, color = as.factor(Frame_Size))) +
+  geom_boxplot(outlier.shape = NA, fill = "#a6cee3", alpha = 0.6) +
+  geom_jitter(width = 0.2, size = 2, alpha = 0.7, aes(color = as.factor(Frame_Size))) +
+  labs(
+    title = "Seat Tube Length Distribution by Frame Size",
+    x = "Frame Size (cm)",
+    y = "Seat Tube Length (mm)",
+    color = "Frame Size"
+  )
+```
+
+## Graph 3: Violin PLot
+
+```{r, eval=FALSE}
+# violin plot with jitter overlay that compares wheel base by frame size and shows density
+bikes %>%
+  filter(!is.na(Frame_Size), Wheelbase <= 1500, Wheelbase >= 750, !is.na(Wheelbase)) %>%
+  ggplot(aes(x = as.factor(Frame_Size), y = Wheelbase, fill = as.factor(Frame_Size))) +
+  geom_violin(alpha = 0.6, color = "black", draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(width = 0.2, size = 1.5, alpha = 0.1) +
+  labs(
+    title = "Distribution of Wheelbase by Frame Size",
+    x = "Frame Size",
+    y = "Wheelbase (mm)",
+    fill = "Frame Size"
+  )
+```
+
+## Table 1: 3-Way MLR Table
+
+```{r, eval=FALSE}
+# making values numeric
+bikes$Wheelbase <- as.numeric(as.character(bikes$Wheelbase))
+
+# XL dummy based on numeric frame size
+bikes <- bikes %>%
+  mutate(FrameSize_XL = ifelse(Frame_Size >= 58, 1, 0))  # 58 and above = XL
+
+# other binary variables
+bikes <- bikes %>%
+  mutate(
+    Category_Road  = ifelse(Category == "Road", 1, 0),
+    WheelSize_700C = ifelse(Wheel_Size == "28″ / 700C", 1, 0)
+  )
+
+# converting to factors with levels 0 and 1
+bikes$Category_Road   <- factor(bikes$Category_Road,   levels = c(0, 1))
+bikes$FrameSize_XL    <- factor(bikes$FrameSize_XL,    levels = c(0, 1))
+bikes$WheelSize_700C  <- factor(bikes$WheelSize_700C,  levels = c(0, 1))
+
+# aggregate mean wheelbase by all 3 factors
+agg <- aggregate(
+  Wheelbase ~ Category_Road + FrameSize_XL + WheelSize_700C,
+  data = bikes,
+  FUN = mean,
+  na.rm = TRUE
+)
+
+#turn the aggregated data into a 3D table
+table_3d <- xtabs(
+  Wheelbase ~ Category_Road + FrameSize_XL + WheelSize_700C,
+  data = agg
+)
+
+# rename dimensions for clarity
+dimnames(table_3d) <- list(
+  Category_Road  = c("Other Category", "Road"),
+  FrameSize_XL   = c("Not XL", "XL"),
+  WheelSize_700C = c("Other Wheel", "700C")
+)
+
+table_3d
+```
+
+## Graph 4: Frequency Bar Chart MLR
+
+```{r, eval=FALSE}
+# flatten 3D table into a data frame
+df_freq <- as.data.frame.table(table_3d) %>%
+  rename(
+    Category_Road   = Category_Road,
+    FrameSize_XL    = FrameSize_XL,
+    WheelSize_700C  = WheelSize_700C,
+    MeanWheelbase   = Freq
+  )
+
+# setting up relative frequency
+df_freq <- df_freq %>%
+  group_by(Category_Road, FrameSize_XL) %>%
+  mutate(RelFreq = MeanWheelbase / sum(MeanWheelbase, na.rm = TRUE))
+
+# plot stacked bar chart
+ggplot(df_freq, aes(x = FrameSize_XL, y = RelFreq, fill = WheelSize_700C)) +
+  geom_col(position = "fill") +  # "fill" makes it 100% stacked
+  facet_wrap(~Category_Road) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Relative Frequency of Wheelbase by Category, Frame Size, and Wheel Size",
+    x = "Frame Size",
+    y = "Percentage",
+    fill = "Wheel Size"
+  ) +
+  theme_minimal()
+
+```
+
+## Graph 5: Scatterplot
+
+```{r, eval=FALSE}
+# scatterplot that compares reach to stack and puts a point where I have desired size
+bikes %>%
+  filter(Frame_Size %in% c(58, 61), Reach >= 300, Stack >= 400) %>%
+  ggplot(aes(x = Reach, y = Stack, color = as.factor(Frame_Size))) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_point(aes(x = 440, y = 630), color = "black", size = 4, shape = 16) +
+  labs(
+    title = "Reach vs. Stack for Frame Sizes 58 and 61",
+    x = "Reach (mm)",
+    y = "Stack (mm)",
+    color = "Frame Size"
+  )
+```
+
+## Table 2: Tolerance Fitted Table
+
+
+```{r, eval=FALSE}
+# creating a base point for a table
+ideal_reach <- 440
+ideal_stack <- 630
+tolerance <- 50
+# filters bikes within a 50 point tolerance of reach and stack
+filtered_bikes <- bikes %>%
+  filter(
+    Category %in% c("Road"),
+    Frame_Size == 61,
+    Reach >= (ideal_reach - tolerance),
+    Reach <= (ideal_reach + tolerance),
+    Stack >= (ideal_stack - tolerance),
+    Stack <= (ideal_stack + tolerance)
+  ) %>% select(Brand, Model, Frame_Size, Reach, Stack) %>%
+  arrange(Reach)  # sort by Reach ascending
+# view the filtered table
+print(filtered_bikes)
+```
+
+## Tables 3 & 4: Count Based On Brand and Frame Size
+
+```{r, eval=FALSE}
+# table displaying count of bikes by brand that I have filtered
+summary_table <- filtered_bikes %>%
+  group_by(Brand) %>%
+  summarize(
+    count = n(),
+    Model,
+    avg_reach = mean(Reach, na.rm = TRUE),
+    avg_stack = mean(Stack, na.rm = TRUE),
+    .groups = "drop"
+  )
+print(summary_table)
+
+# aggregated summary statistics of bikes that I have filtered
+filtered_bikes %>%
+  group_by(Frame_Size) %>%
+  summarize(
+    count = n(),
+    mean_reach = mean(Reach, na.rm = TRUE),
+    sd_reach = sd(Reach, na.rm = TRUE),
+    mean_stack = mean(Stack, na.rm = TRUE),
+    sd_stack = sd(Stack, na.rm = TRUE)
+  )
+```
+
+\clearpage
